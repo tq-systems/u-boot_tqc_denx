@@ -2424,6 +2424,9 @@ SIMPC8313_SP_config: unconfig
 TQM834x_config:	unconfig
 	@$(MKCONFIG) $(@:_config=) ppc mpc83xx tqm834x tqc
 
+TQM8360_config:	unconfig
+	@$(MKCONFIG) $(@:_config=) ppc mpc83xx tqm8360 tqc
+
 vme8349_config:		unconfig
 	@$(MKCONFIG) $(@:_config=) ppc mpc83xx vme8349 esd
 
