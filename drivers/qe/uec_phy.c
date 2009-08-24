@@ -654,6 +654,42 @@ static int smsc_read_status (struct uec_mii_info *mii_info)
 	return 0;
 }
 
+static int ics1893cf_config_aneg (struct uec_mii_info *mii_info)
+{
+	genmii_config_aneg(mii_info);
+	return 0;
+}
+
+static int ics1893cf_read_status (struct uec_mii_info *mii_info)
+{
+	u16 status;
+	int err;
+
+	/* Update the link, but return if there was an error */
+	err = genmii_update_link (mii_info);
+	if (err)
+		return err;
+
+	if (mii_info->autoneg && mii_info->link)
+	{
+		status = phy_read(mii_info, MII_ICS1893CF_QUICKPOLL_STATUS);
+
+		if (status & MII_ICS1893CF_STATUS_100M)
+			mii_info->speed = SPEED_100;
+		else
+		    mii_info->speed = SPEED_10;
+
+		if (status & MII_ICS1893CF_STATUS_FULL_DUPLEX)
+		    mii_info->duplex = DUPLEX_FULL;
+		else
+			mii_info->duplex = DUPLEX_HALF;
+
+        /* the ics1893cf has no pause bit */
+		mii_info->pause = 0;
+	}
+	return 0;
+}
+
 static struct phy_info phy_info_dm9161 = {
 	.phy_id = 0x0181b880,
 	.phy_id_mask = 0x0ffffff0,
@@ -715,6 +751,15 @@ static struct phy_info phy_info_smsclan8700 = {
 	.read_status = smsc_read_status,
 };
 
+static struct phy_info phy_info_ics1893cf = {
+	.phy_id = 0x0015f450,
+	.phy_id_mask = 0x0ffffff0,
+	.name = "ICS1893CF",
+	.features = MII_BASIC_FEATURES,
+	.config_aneg = ics1893cf_config_aneg,
+	.read_status = ics1893cf_read_status,
+};
+
 static struct phy_info phy_info_genmii = {
 	.phy_id = 0x00000000,
 	.phy_id_mask = 0x00000000,
@@ -731,6 +776,7 @@ static struct phy_info *phy_info[] = {
 	&phy_info_bcm5481,
 	&phy_info_smsclan8700,
 	&phy_info_fixedphy,
+	&phy_info_ics1893cf,
 	&phy_info_genmii,
 	NULL
 };
