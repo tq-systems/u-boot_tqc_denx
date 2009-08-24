@@ -57,24 +57,26 @@ typedef struct sysconf83xx {
 	law83xx_t pcielaw[2];	/* PCI Express local access window */
 	u8 res4[0x10];
 	law83xx_t ddrlaw[2];	/* DDR local access window */
-	u8 res5[0x50];
+	u8 res5[0x30];
+	law83xx_t sddrlaw[2];	/* secondary DDR local access window */
+	u8 res6[0x10];
 	u32 sgprl;		/* System General Purpose Register Low */
 	u32 sgprh;		/* System General Purpose Register High */
 	u32 spridr;		/* System Part and Revision ID Register */
-	u8 res6[0x04];
+	u8 res7[0x04];
 	u32 spcr;		/* System Priority Configuration Register */
 	u32 sicrl;		/* System I/O Configuration Register Low */
 	u32 sicrh;		/* System I/O Configuration Register High */
-	u8 res7[0x04];
+	u8 res8[0x04];
 	u32 sidcr0;		/* System I/O Delay Configuration Register 0 */
 	u32 sidcr1;		/* System I/O Delay Configuration Register 1 */
 	u32 ddrcdr;		/* DDR Control Driver Register */
 	u32 ddrdsr;		/* DDR Debug Status Register */
 	u32 obir;		/* Output Buffer Impedance Register */
-	u8 res8[0xC];
+	u8 res9[0xC];
 	u32 pecr1;		/* PCI Express control register 1 */
 	u32 pecr2;		/* PCI Express control register 2 */
-	u8 res9[0xB8];
+	u8 res10[0xB8];
 } sysconf83xx_t;
 
 /*
