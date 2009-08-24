@@ -842,7 +842,11 @@ void marvell_phy_interface_mode (struct eth_device *dev,
 	}
 	mii_info = uec->mii_info;
 
-	if (mode == ENET_100_RGMII) {
+	if (mode == ENET_1000_RGMII) {
+		phy_write (mii_info, 0x14, 0x0cd2);
+		phy_write (mii_info, 0x00, 0xa100);
+		udelay (1000000);
+	} else if (mode == ENET_100_RGMII) {
 		phy_write (mii_info, 0x00, 0x9140);
 		phy_write (mii_info, 0x1d, 0x001f);
 		phy_write (mii_info, 0x1e, 0x200c);

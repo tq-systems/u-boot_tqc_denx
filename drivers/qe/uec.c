@@ -330,6 +330,9 @@ static int uec_set_mac_if_mode(uec_private_t *uec, enet_interface_e if_mode)
 	uec_t			*uec_regs;
 	u32			upsmr;
 	u32			maccfg2;
+#ifdef CONFIG_SYS_QE_ENET10_ERRATA
+	u32			adj;
+#endif
 
 	if (!uec) {
 		printf("%s: uec not initial\n", __FUNCTION__);
@@ -367,6 +370,18 @@ static int uec_set_mac_if_mode(uec_private_t *uec, enet_interface_e if_mode)
 		case ENET_1000_RGMII:
 			maccfg2 |= MACCFG2_INTERFACE_MODE_BYTE;
 			upsmr |= UPSMR_RPM;
+#ifdef CONFIG_SYS_QE_ENET10_ERRATA
+			/* Fix for 8360 erratum QE_ENET10
+			 * The IO delay should be adjusted about +0.5ns
+			 * For UCC1 this is done in the bits 18:19 in
+			 * the undocumented register at 0x14a8
+			 * The bits must have the value 10b
+			 */
+			adj = in_be32((u32 *)(CONFIG_SYS_IMMR + 0x14a8));
+			adj &= 0xFFFFCFFF;
+			adj |= 0x00002000;
+			out_be32((u32 *)(CONFIG_SYS_IMMR + 0x14a8), adj);
+#endif
 			break;
 		case ENET_100_RGMII:
 			maccfg2 |= MACCFG2_INTERFACE_MODE_NIBBLE;
@@ -525,6 +540,12 @@ static void adjust_link(struct eth_device *dev)
 			if (uec->uec_info->uf_info.eth_type == GIGA_ETH) {
 				switch (mii_info->speed) {
 				case 1000:
+					printf ("switching to rgmii 1000\n");
+					/* change phy to rgmii 100 */
+					change_phy_interface_mode(dev,
+							ENET_1000_RGMII);
+					/* change the MAC interface mode */
+					uec_set_mac_if_mode(uec,ENET_1000_RGMII);
 					break;
 				case 100:
 					printf ("switching to rgmii 100\n");
