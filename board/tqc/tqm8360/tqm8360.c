@@ -861,6 +861,14 @@ int checkboard (void)
  */
 int misc_init_r (void)
 {
+	volatile immap_t *im = (volatile immap_t *)CONFIG_SYS_IMMR;
+
+	/* set OR0 and BR0 */
+	im->lbus.bank[0].or = CONFIG_SYS_OR_TIMING_FLASH |
+			(-(gd->bd->bi_flashsize) & OR_GPCM_AM);
+	im->lbus.bank[0].br = (CONFIG_SYS_FLASH_BASE & BR_BA) |
+			(BR_MS_GPCM | BR_PS_32 | BR_V);
+
 	return (0);
 }
 
