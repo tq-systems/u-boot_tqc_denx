@@ -50,9 +50,63 @@ void ps2mult_early_init (void);
 
 /* global variable */
 const qe_iop_conf_t qe_iop_conf_tab[] = {
-/* GETH in RGMII mode */
+#ifdef CONFIG_TQM8360L_CA
+#ifdef CONFIG_UEC_ETH1
+/* GETH in GMII mode */
+	{0,  3, 1, 0, 1}, /* TxD0 */
+	{0,  4, 1, 0, 1}, /* TxD1 */
+	{0,  5, 1, 0, 1}, /* TxD2 */
+	{0,  6, 1, 0, 1}, /* TxD3 */
+	{1,  6, 1, 0, 3}, /* TxD4 */
+	{1,  7, 1, 0, 1}, /* TxD5 */
+	{1,  9, 1, 0, 2}, /* TxD6 */
+	{1, 10, 1, 0, 2}, /* TxD7 */
+	{0,  9, 2, 0, 1}, /* RxD0 */
+	{0, 10, 2, 0, 1}, /* RxD1 */
+	{0, 11, 2, 0, 1}, /* RxD2 */
+	{0, 12, 2, 0, 1}, /* RxD3 */
+	{0, 13, 2, 0, 1}, /* RxD4 */
+	{1,  1, 2, 0, 2}, /* RxD5 */
+	{1,  0, 2, 0, 2}, /* RxD6 */
+	{1,  4, 2, 0, 2}, /* RxD7 */
+	{0,  7, 1, 0, 1}, /* TX_EN */
+	{0,  8, 1, 0, 1}, /* TX_ER */
+	{0, 14, 2, 0, 1}, /* CRS */
+	{0, 15, 2, 0, 1}, /* RX_DV */
+	{0, 16, 2, 0, 1}, /* RX_ER */
+	{0,  0, 2, 0, 1}, /* RX_CLK */
+	{2,  8, 2, 0, 1}, /* GTX125 - CLK9 */
+	{2,  9, 1, 0, 3}, /* GTX_CLK - CLK10 */
+	{2, 10, 2, 0, 3}, /* COL */
+#endif
+
+#ifdef CONFIG_QUAD_ETH
+#ifdef CONFIG_UEC_ETH4
+	/* UEC4 = FETH4 MII */
+	{1, 14, 1, 0, 1}, /* TxD0 */
+	{1, 15, 1, 0, 1}, /* TxD1 */
+	{1, 16, 1, 0, 1}, /* TxD2 */
+	{1, 17, 1, 0, 1}, /* TxD3 */
+	{1, 20, 2, 0, 1}, /* RxD0 */
+	{1, 21, 2, 0, 1}, /* RxD1 */
+	{1, 22, 2, 0, 1}, /* RxD2 */
+	{1, 23, 2, 0, 1}, /* RxD3 */
+	{1, 18, 1, 0, 1}, /* TX_EN */
+	{1, 19, 1, 0, 2}, /* TX_ER */
+	{1, 26, 2, 0, 1}, /* RX_DV */
+	{1, 27, 2, 0, 1}, /* RX_ER */
+	{1, 24, 2, 0, 1}, /* COL */
+	{1, 25, 2, 0, 1}, /* CRS */
+	{2,  7, 2, 0, 1}, /* TX_CLK = CLK8 */
+	{2,  6, 2, 0, 1}, /* RX_CLK = CLK7 */
+#endif
+#endif /* CONFIG_QUAD_ETH */
+
+#else /* CONFIG_TQM8360L_CA */
+
 #ifdef CONFIG_UEC_ETH1
 	/* GETH1 */
+/* GETH in RGMII mode */
 	{0,  3, 1, 0, 1}, /* TxD0 */
 	{0,  4, 1, 0, 1}, /* TxD1 */
 	{0,  5, 1, 0, 1}, /* TxD2 */
@@ -160,7 +214,8 @@ const qe_iop_conf_t qe_iop_conf_tab[] = {
 	{2,  5, 2, 0, 1}, /* TX_CLK = CLK6 */
 	{2,  4, 2, 0, 1}, /* RX_CLK = CLK5 */
 #endif
-#endif
+#endif /* CONFIG_QUAD_ETH */
+#endif /* CONFIG_TQM8360L_CA */
 
 	{0,  1, 3, 0, 2}, /* MDIO */
 	{0,  2, 1, 0, 1}, /* MDC */
@@ -852,7 +907,11 @@ phys_size_t initdram (int board_type)
 
 int checkboard (void)
 {
-	puts ("Board: TQM8360\n");
+#ifdef CONFIG_TQM8360L_CA
+	puts ("Board: TQM8360L-CA\n");
+#else
+	puts ("Board: TQM8360L\n");
+#endif
 	return 0;
 }
 
@@ -967,8 +1026,10 @@ void ft_board_setup (void *blob, bd_t * bd)
 {
 	const immap_t *immr = (immap_t *) CONFIG_SYS_IMMR;
 	int nodeoffset;
+#if defined(CONFIG_HAS_ETH0) || defined(CONFIG_HAS_ETH1)
 	const char *prop;
 	int path;
+#endif
 
 	ft_cpu_setup (blob, bd);
 #ifdef CONFIG_PCI

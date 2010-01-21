@@ -33,9 +33,11 @@
 #define CONFIG_MPC83XX		1	/* MPC83XX family */
 #define CONFIG_MPC8360		1	/* MPC8360 CPU specific */
 #define CONFIG_TQM8360		1	/* TQM8360 board specific */
-#undef  CONFIG_TQM8358			/* TQM8358 board specific */
 
-#define CONFIG_MISC_INIT_R	1	/* Call misc_init_r		*/
+/* define one of the module specific macros if necessary */
+#undef CONFIG_TQM8360L_CA		/* TQM8360L-CA module specific */
+
+#define CONFIG_MISC_INIT_R	1	/* Call misc_init_r */
 
 /*
  * System Clock Setup
@@ -49,7 +51,6 @@
  * to more than 256 KB. Please adjust TEXT_BASE if necessary.
  */
 #undef CONFIG_NAND
-#define CONFIG_NAND
 
 /*
  * Hardware Reset Configuration Word
@@ -59,7 +60,7 @@
 			HRCWL_DDR_TO_SCB_CLK_1X1 |\
 			HRCWL_CSB_TO_CLKIN_4X1 |\
 			HRCWL_VCO_1X2 |\
-			HRCWL_CE_PLL_VCO_DIV_4 |\
+			HRCWL_CE_PLL_VCO_DIV_2 |\
 			HRCWL_CE_PLL_DIV_1X1 |\
 			HRCWL_CE_TO_PLL_1X6 |\
 			HRCWL_CORE_TO_CSB_2X1)
@@ -98,8 +99,8 @@
  * Memory test
  */
 #undef CONFIG_SYS_DRAM_TEST		/* memory test, takes time */
-#define CONFIG_SYS_MEMTEST_START	0x00000000 /* memtest region */
-#define CONFIG_SYS_MEMTEST_END		0x00100000
+#define CONFIG_SYS_MEMTEST_START	0x0C000000 /* memtest region */
+#define CONFIG_SYS_MEMTEST_END		0x0CFFFFFF
 
 /*
  * The reserved memory
@@ -114,7 +115,7 @@
 #endif
 
 #define CONFIG_SYS_MONITOR_LEN		(512 * 1024) /* 512 kB for Mon */
-#define CONFIG_SYS_MALLOC_LEN		(256 * 1024) /* 256 kB for malloc */
+#define CONFIG_SYS_MALLOC_LEN		(512 * 1024) /* 512 kB for malloc */
 
 /*
  * Initial RAM Base Address Setup
@@ -145,13 +146,21 @@
 #define CONFIG_SYS_FLASH_SIZE		128
 
 #define CONFIG_SYS_FLASH_USE_BUFFER_WRITE
+#define CONFIG_SYS_FLASH_EMPTY_INFO
 
+
+#ifdef CONFIG_TQM8360L_CA
+/* TQM8360L-CA has only one flash bank */
+#define CONFIG_SYS_MAX_FLASH_BANKS	1
+#define CONFIG_SYS_FLASH_BANKS_LIST	{CONFIG_SYS_FLASH_BASE}
+#else
+/* standard module has dual die flash = two banks */
 #define CONFIG_SYS_MAX_FLASH_BANKS	2
-
-/* flash has dual die */
 #define CONFIG_SYS_FLASH_BANKS_LIST	{CONFIG_SYS_FLASH_BASE, \
 					(CONFIG_SYS_FLASH_BASE + \
 					((CONFIG_SYS_FLASH_SIZE / 2) << 20))}
+#endif
+
 #define CONFIG_SYS_MAX_FLASH_SECT	260
 
 #undef  CONFIG_SYS_FLASH_CHECKSUM
@@ -322,7 +331,40 @@
 #define CONFIG_ETHPRIME		"FSL UEC0"
 #define CONFIG_PHY_MODE_NEED_CHANGE
 
-/* defines for STK85xxNG with TQM8360 and TQF-ETH2x1000 as FlexiFace 1c */
+#ifdef CONFIG_TQM8360L_CA
+/* defines for TQM8360L-CA on customer board */
+#define CONFIG_UEC_ETH1 /* GETH1 */
+#ifdef CONFIG_UEC_ETH1
+#define CONFIG_HAS_ETH0
+#define CONFIG_SYS_UEC1_UCC_NUM		0   /* UCC1 */
+#define CONFIG_SYS_UEC1_RX_CLK		QE_CLK_NONE
+#define CONFIG_SYS_UEC1_TX_CLK		QE_CLK9
+#define CONFIG_SYS_UEC1_ETH_TYPE	GIGA_ETH
+#define CONFIG_SYS_UEC1_PHY_ADDR	2
+#define CONFIG_SYS_UEC1_INTERFACE_MODE	ENET_1000_GMII
+#endif
+
+#define CONFIG_QUAD_ETH /* use UCC4 Fast Ethernet */
+
+#ifdef CONFIG_QUAD_ETH
+
+#define CONFIG_UEC_ETH4
+
+#ifdef CONFIG_UEC_ETH4
+#define CONFIG_HAS_ETH1
+#define CONFIG_SYS_UEC4_UCC_NUM		3   /* UCC4 */
+#define CONFIG_SYS_UEC4_RX_CLK		QE_CLK7
+#define CONFIG_SYS_UEC4_TX_CLK		QE_CLK8
+#define CONFIG_SYS_UEC4_ETH_TYPE	FAST_ETH
+#define CONFIG_SYS_UEC4_PHY_ADDR	0
+#define CONFIG_SYS_UEC4_INTERFACE_MODE	ENET_100_MII
+#endif
+
+#endif /* CONFIG_QUAD_ETH */
+
+#else /* CONFIG_TQM8360L_CA */
+
+/* defines for STK85xxNG with TQM8360L and TQF-ETH2x1000 as FlexiFace 1c */
 #define CONFIG_UEC_ETH1 /* GETH1 */
 #ifdef CONFIG_UEC_ETH1
 #define CONFIG_HAS_ETH0
@@ -345,7 +387,7 @@
 #define CONFIG_SYS_UEC2_INTERFACE_MODE	ENET_1000_RGMII
 #endif
 
-#if defined(CONFIG_UEC_ETH1) | defined(CONFIG_UEC_ETH2)
+#if defined(CONFIG_UEC_ETH1) || defined(CONFIG_UEC_ETH2)
 #define CONFIG_SYS_QE_ENET10_ERRATA	/* fix MPC8360 erratum QE_ENET10 */
 #endif
 
@@ -403,6 +445,8 @@
 #endif
 
 #endif /* CONFIG_QUAD_ETH */
+
+#endif /* CONFIG_TQM8360L_CA */
 
 #endif /* CONFIG_UEC_ETH */
 
@@ -481,7 +525,7 @@
 #define CONFIG_ENV_ADDR			(CONFIG_SYS_MONITOR_BASE \
 					+ CONFIG_SYS_MONITOR_LEN)
 #define CONFIG_ENV_SECT_SIZE		0x40000	/* 256K(one sector) for env */
-#define CONFIG_ENV_SIZE			CONFIG_ENV_SECT_SIZE
+#define CONFIG_ENV_SIZE			0x2000
 #define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET \
 					+ CONFIG_ENV_SECT_SIZE)
 #define CONFIG_ENV_SIZE_REDUND		(CONFIG_ENV_SIZE)
@@ -510,15 +554,15 @@
  * Command line configuration.
  */
 #include <config_cmd_default.h>
-
-#define CONFIG_CMD_PING
 #define CONFIG_CMD_ASKENV
-#define CONFIG_CMD_DHCP
-
-#define CONFIG_CMD_I2C
 #define CONFIG_CMD_DATE
-#define CONFIG_CMD_EEPROM
+#define CONFIG_CMD_DHCP
 #define CONFIG_CMD_DTT
+#define CONFIG_CMD_EEPROM
+#define CONFIG_CMD_I2C
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_CMD_PING
+#define CONFIG_CMD_REGINFO
 
 #ifdef CONFIG_NAND
 /*
@@ -528,12 +572,15 @@
 #define CONFIG_CMD_JFFS2
 
 #define	CONFIG_JFFS2_NAND	1
+#endif /* CONFIG_NAND */
 
-/* mtdparts command line support */
 #ifdef CONFIG_CMD_MTDPARTS
+/* mtdparts command line support */
 #define CONFIG_MTD_DEVICE	/* needed for mtdparts commands */
 #define CONFIG_FLASH_CFI_MTD
+#define CONFIG_MTD_PARTITIONS
 
+#ifdef CONFIG_NAND
 /* default mtd partition table */
 #define MTDIDS_DEFAULT		"nor0=80000000.flash,nand0=e0800000.nand"
 #define MTDPARTS_DEFAULT	"mtdparts=80000000.flash:512k(u-boot),"\
@@ -545,12 +592,21 @@
 				"-(user);"\
 				"e0800000.nand:2M(kernel),"\
 				"-(fs);"
-#else
 #define CONFIG_JFFS2_DEV 	"nand0"	/* NAND device jffs2 lives on	*/
 #define CONFIG_JFFS2_PART_OFFSET 0	/* start of jffs2 partition	*/
 #define CONFIG_JFFS2_PART_SIZE	0x200000 /* size of jffs2 partition	*/
-#endif /* CONFIG_JFFS2_CMDLINE */
+#else
+/* default mtd partition table */
+#define MTDIDS_DEFAULT		"nor0=80000000.flash"
+#define MTDPARTS_DEFAULT	"mtdparts=80000000.flash:512k(u-boot),"\
+				"256k(env1),"\
+				"256k(env2),"\
+				"256k(fdt),"\
+				"2M(kernel),"\
+				"4M(root),"\
+				"-(user);"
 #endif /* CONFIG_NAND */
+#endif /* CONFIG_CMD_MTDPARTS */
 
 #define CONFIG_CMD_MII
 
@@ -562,6 +618,8 @@
     #undef CONFIG_CMD_SAVEENV
     #undef CONFIG_CMD_LOADS
 #endif
+
+#define CONFIG_CMD_CACHE
 
 #undef CONFIG_WATCHDOG		/* watchdog disabled */
 
@@ -742,7 +800,6 @@
 	"echo Type \\\"run flash_nfs\\\" to mount root filesystem over NFS;" \
 	"echo"
 
-#ifdef CONFIG_TQM8360
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"netdev=eth0\0" \
 	"consoledev=ttyS0\0" \
@@ -775,15 +832,14 @@
 	"ramdiskaddr_r=2000000\0" \
 	"fdt_file=tqm8360.dtb\0" \
 	"uboot=u-boot_tqm8360.bin\0" \
-	"load=tftp 100000 ${uboot}\0" \
+	"load=tftp ${loadaddr} ${uboot}\0" \
 	"update=protect off ${uboot_addr} +${filesize};" \
 		"erase ${uboot_addr} +${filesize};" \
-		"cp.b 100000 ${uboot_addr} ${filesize};" \
+		"cp.b ${fileaddr} ${uboot_addr} ${filesize};" \
 		"setenv filesize\0" \
 	"upd=run load update\0" \
-	"mtdparts=MTDPARTS_DEFAULT\0" \
+	"mtdparts="MTDPARTS_DEFAULT"\0" \
 	""
-#endif
 
 #define CONFIG_BOOTCOMMAND	"run flash_self"
 
