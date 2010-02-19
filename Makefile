@@ -2387,6 +2387,9 @@ SIMPC8313_SP_config: unconfig
 TQM834x_config:	unconfig
 	@$(MKCONFIG) $(@:_config=) ppc mpc83xx tqm834x tqc
 
+TQM8315_config: unconfig
+	@$(MKCONFIG) $(@:_config=) ppc mpc83xx tqm8315 tqc
+
 
 #########################################################################
 ## MPC85xx Systems
