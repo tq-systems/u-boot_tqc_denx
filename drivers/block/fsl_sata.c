@@ -112,6 +112,27 @@ static int ata_wait_register(volatile unsigned *addr, u32 mask,
 	return (i < timeout_msec) ? 0 : -1;
 }
 
+#if defined(CONFIG_MPC8315)
+#ifndef CONFIG_SYS_SATA_CLK
+#define CONFIG_SYS_SATA_CLK PHYCTRLCFG_REFCLK_75MHZ
+#endif
+/* If you have a MPC8315 board, you can call this function from last_stage_init
+ * call to setup the MPC8315 specific PHY clocking parameter */
+void init_mpc8315_sata_phy(void)
+{
+	u32 val32;
+	fsl_sata_reg_t *reg;
+
+	reg = (fsl_sata_reg_t *)(CONFIG_SYS_IMMR + 0x18000);
+
+	/* Configure PHY */
+	val32 = in_le32(&reg->phyctrlcfg);
+	val32 &= ~PHYCTRLCFG_REFCLK_MASK;
+	val32 |= CONFIG_SYS_SATA_CLK;
+	out_le32(&reg->phyctrlcfg, val32);
+}
+#endif
+
 int init_sata(int dev)
 {
 	u32 length, align;
