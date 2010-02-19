@@ -121,8 +121,10 @@ static void mpc83xx_pcie_register_hose(int bus, struct pci_region *reg,
 	hose->regions[i].size = 0x100000;
 	hose->regions[i].flags = PCI_REGION_MEM | PCI_REGION_SYS_MEMORY;
 
-	hose->first_busno = pci_last_busno() + 1;
+	hose->first_busno = 0;
 	hose->last_busno = 0xff;
+	/* Always scan the first bus behind the bridge (bus number 1) */
+	hose->current_busno = 1;
 
 	if (bus == 0)
 		hose->cfg_addr = (unsigned int *)CONFIG_SYS_PCIE1_CFG_BASE;
@@ -170,6 +172,7 @@ static void mpc83xx_pcie_init_bus(int bus, struct pci_region *reg)
 	unsigned int tar;
 	u16 reg16;
 	int i;
+	struct pci_region *tmp_reg;
 
 	/* Enable pex csb bridge inbound & outbound transactions */
 	out_le32(&pex->bridge.pex_csb_ctrl,
@@ -194,6 +197,7 @@ static void mpc83xx_pcie_init_bus(int bus, struct pci_region *reg)
 	out_le32(&out_win->tarl, 0);
 	out_le32(&out_win->tarh, 0);
 
+	tmp_reg = reg;
 	for (i = 0; i < 2; i++, reg++) {
 		u32 ar;
 
@@ -211,6 +215,7 @@ static void mpc83xx_pcie_init_bus(int bus, struct pci_region *reg)
 			ar |= PEX_OWAR_TYPE_MEM;
 		out_le32(&out_win->ar, ar);
 	}
+	reg = tmp_reg;
 
 	out_le32(&pex->bridge.pex_csb_ibctrl, PEX_CSB_IBCTRL_PIOE);
 

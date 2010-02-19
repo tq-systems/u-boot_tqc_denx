@@ -54,10 +54,12 @@ void fsl_setup_serdes(u32 offset, char proto, u32 rfcks, char vdd)
 		tmp &= ~FSL_SRDSCR0_DPP_1V2;
 		out_be32(regs + FSL_SRDSCR0_OFFS, tmp);
 
+#if defined (CONFIG_MPC837X)
 		/* VDD = 0 */
 		tmp = in_be32(regs + FSL_SRDSCR2_OFFS);
 		tmp &= ~FSL_SRDSCR2_VDD_1V2;
 		out_be32(regs + FSL_SRDSCR2_OFFS, tmp);
+#endif
 	}
 
 	/* protocol specific configuration */
@@ -94,6 +96,7 @@ void fsl_setup_serdes(u32 offset, char proto, u32 rfcks, char vdd)
 		break;
 	case FSL_SERDES_PROTO_PEX:
 	case FSL_SERDES_PROTO_PEX_X2:
+#if defined (CONFIG_MPC837X)
 		/* Configure SRDSCR1 */
 		tmp = in_be32(regs + FSL_SRDSCR1_OFFS);
 		tmp |= FSL_SRDSCR1_PLLBW;
@@ -104,6 +107,7 @@ void fsl_setup_serdes(u32 offset, char proto, u32 rfcks, char vdd)
 		tmp &= ~FSL_SRDSCR2_SEIC_MASK;
 		tmp |= FSL_SRDSCR2_SEIC_PEX;
 		out_be32(regs + FSL_SRDSCR2_OFFS, tmp);
+#endif
 
 		/* Configure SRDSCR3 */
 		tmp = FSL_SRDSCR3_SDFM_SATA_PEX;
@@ -116,6 +120,7 @@ void fsl_setup_serdes(u32 offset, char proto, u32 rfcks, char vdd)
 		out_be32(regs + FSL_SRDSCR4_OFFS, tmp);
 		break;
 	case FSL_SERDES_PROTO_SGMII:
+#if defined (CONFIG_MPC837X)
 		/* Configure SRDSCR1 */
 		tmp = in_be32(regs + FSL_SRDSCR1_OFFS);
 		tmp &= ~FSL_SRDSCR1_PLLBW;
@@ -126,6 +131,7 @@ void fsl_setup_serdes(u32 offset, char proto, u32 rfcks, char vdd)
 		tmp &= ~FSL_SRDSCR2_SEIC_MASK;
 		tmp |= FSL_SRDSCR2_SEIC_SGMII;
 		out_be32(regs + FSL_SRDSCR2_OFFS, tmp);
+#endif
 
 		/* Configure SRDSCR3 */
 		out_be32(regs + FSL_SRDSCR3_OFFS, 0);

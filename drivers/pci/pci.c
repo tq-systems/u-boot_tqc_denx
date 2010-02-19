@@ -203,7 +203,7 @@ pci_dev_t pci_find_devices(struct pci_device_id *ids, int index)
 			     bdf += PCI_BDF(0,0,1))
 			{
 				if (!PCI_FUNC(bdf)) {
-					pci_read_config_byte(bdf,
+					pci_hose_read_config_byte(hose, bdf,
 							     PCI_HEADER_TYPE,
 							     &header_type);
 
@@ -213,10 +213,10 @@ pci_dev_t pci_find_devices(struct pci_device_id *ids, int index)
 						continue;
 				}
 
-				pci_read_config_word(bdf,
+				pci_hose_read_config_word(hose, bdf,
 						     PCI_VENDOR_ID,
 						     &vendor);
-				pci_read_config_word(bdf,
+				pci_hose_read_config_word(hose, bdf,
 						     PCI_DEVICE_ID,
 						     &device);
 
