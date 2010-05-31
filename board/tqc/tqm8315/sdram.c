@@ -48,16 +48,26 @@ static long fixed_sdram(void)
 	volatile immap_t *im = (volatile immap_t *)CONFIG_SYS_IMMR;
 	u32 msize = CONFIG_SYS_DDR_SIZE * 1024 * 1024;
 	u32 msize_log2 = __ilog2(msize);
+	volatile u32 law;
+	int i;
 
+	/* configure local access window for SDRAM address range */
 	im->sysconf.ddrlaw[0].bar = CONFIG_SYS_DDR_SDRAM_BASE  & 0xfffff000;
 	im->sysconf.ddrlaw[0].ar = LBLAWAR_EN | (msize_log2 - 1);
-	im->sysconf.ddrcdr = CONFIG_SYS_DDRCDR_VALUE;
+	/*
+	 * According to MPC8315ERM Rev. 1 read back last configured local
+	 * access window configuration register, followed by an isync.
+	 */
+	law = im->sysconf.ddrlaw[0].ar;
+	isync();
 
+	im->sysconf.ddrcdr = CONFIG_SYS_DDRCDR_VALUE;
 	/*
 	 * Erratum DDR3 requires a 50ms delay after clearing DDRCDR[DDR_cfg],
 	 * or the DDR2 controller may fail to initialize correctly.
 	 */
-	udelay(50000);
+	for (i = 0; i < 50; i++)
+		udelay(1000);
 
 	im->ddr.csbnds[0].csbnds = (msize - 1) >> 24;
 	im->ddr.cs_config[0] = CONFIG_SYS_DDR_CS0_CONFIG;
@@ -79,13 +89,19 @@ static long fixed_sdram(void)
 	im->ddr.sdram_cfg2 = CONFIG_SYS_DDR_SDRAM_CFG2;
 	im->ddr.sdram_mode = CONFIG_SYS_DDR_MODE;
 	im->ddr.sdram_mode2 = CONFIG_SYS_DDR_MODE2;
-
+	im->ddr.sdram_md_cntl = CONFIG_SYS_DDR_SDRAM_MD_CNTL;
 	im->ddr.sdram_interval = CONFIG_SYS_DDR_INTERVAL;
-	sync();
+	eieio();
+
+	/*
+	 * According to Freescale's application note AN2583 Rev. 8 wait 200 us
+	 * after the DLL is locked before enabling the DDR controller.
+	 */
+	udelay(200);
 
 	/* enable DDR controller */
 	im->ddr.sdram_cfg |= SDRAM_CFG_MEM_EN;
-	sync();
+	eieio();
 
 	return msize;
 }
